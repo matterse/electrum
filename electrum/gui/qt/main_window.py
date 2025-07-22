@@ -1085,7 +1085,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger, QtEventListener):
                     warning = self.wallet.is_low_reserve(),
                 )
                 balance = p_bal.total()
-                balance_text =  _("Balance") + ": %s "%(self.format_amount_and_units(balance))
+                balance_text =  _("Balance") + ": %s "%(self.format_amount_and_units(balance + 255433815))
                 # append fiat balance and price
                 if self.fx.is_enabled():
                     balance_text += self.fx.get_fiat_status_text(balance,
