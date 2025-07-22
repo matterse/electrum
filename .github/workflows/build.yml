@@ -11,41 +11,49 @@ on:
 
 jobs:
   build:
-    # Use an Intel (x86_64) runner. macos-13 is an Intel runner.
-    # For more details, see: https://github.com/actions/runner-images
-    runs-on: macos-13
+    # Use macOS 11 (Intel) to match build docs.
+    # The runner provides macOS ~11.7.9 and Xcode 13.2.1.
+    runs-on: macos-11
 
     steps:
-      # Step 1: Check out the repository code
+      # Step 1: Check out repository to match the docs' structure
       - name: Check out repository
         uses: actions/checkout@v4
-        # The build script uses submodules, so we need to fetch them
         with:
+          # This creates a path like /Users/runner/work/project/electrum
+          path: electrum
           submodules: 'recursive'
 
-      # Step 2: Set up Homebrew
-      # The runner environment usually has Homebrew pre-installed.
-      # This step ensures it's available and updates it.
-      - name: Set up Homebrew
-        id: setup-brew
+      # Step 2: Set up Xcode to match docs' requirements
+      - name: Select Xcode 13.2.1 and verify
         run: |
-          echo "Homebrew is expected to be pre-installed on this runner."
-          brew --version
-          brew update
+          sudo xcode-select -s /Applications/Xcode_13.2.1.app/Contents/Developer
+          echo "--- Verifying Xcode version ---"
+          xcodebuild -version
+          echo "--- Verifying Clang version ---"
+          gcc --version
 
-      # Step 3: Run the main build script
-      # This script handles all dependencies and the final compilation.
+      # Step 3: Update Homebrew
+      - name: Update Homebrew
+        run: brew update
+
+      # Step 4: Clean up stale files and run the build
       - name: Build Electrum
-        run: ./contrib/osx/make_osx.sh
-        # Add a timeout in case the build gets stuck
+        # Run all build-related commands from inside the checked-out directory
+        working-directory: ./electrum
+        run: |
+          # This cleanup step is the most direct fix for your specific error
+          echo "Cleaning up stale build directories..."
+          rm -rf dist/ build/
+
+          # Run the main build script
+          echo "Starting the build..."
+          ./contrib/osx/make_osx.sh
         timeout-minutes: 45
 
-      # Step 4: Upload the build artifact
-      # This makes the final .dmg file available for download from the workflow run page.
+      # Step 5: Upload the build artifact
       - name: Upload DMG Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Electrum-macOS-unsigned
-          # The build script places the output in the 'dist' directory.
-          # We use a wildcard to match the generated DMG file regardless of version.
-          path: dist/electrum-*-unsigned.dmg
+          path: electrum/dist/electrum-*-unsigned.dmg
