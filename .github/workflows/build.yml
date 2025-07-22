@@ -32,6 +32,8 @@ jobs:
           echo "Homebrew is expected to be pre-installed on this runner."
           brew --version
           brew update
+      - name: MKDIR plugins
+        run: mkdir -p dist/Electrum.app/Contents/Frameworks/electrum/plugins
 
       # Step 3: Run the main build script
       # This script handles all dependencies and the final compilation.
